@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable Physics Images with Matter.js</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script>
+        const container = document.getElementById('container');
+
+        // Create engine and world
+        const engine = Matter.Engine.create();
+        const world = engine.world;
+
+        // Create renderer
+        const render = Matter.Render.create({
+            element: container,
+            engine: engine,
+            options: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                wireframes: false,
+                background: '#f0f0f0'
+            }
+        });
+
+        // Image URLs
+        const imageUrls = [
+            'https://webaroo.us/s-lg-1.png',
+            'https://webaroo.us/s-lg-2.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png',
+            'https://webaroo.us/s-lg-3.png'
+        ];
+
+        // Create boxes with images
+        const boxes = [];
+        const boxSize = 100;
+        const createBox = (x, y, imageUrl) => {
+            const box = Matter.Bodies.rectangle(x, y, boxSize, boxSize, {
+                restitution: 0.8,
+                friction: 0.5,
+                render: {
+                    sprite: {
+                        texture: imageUrl,
+                        xScale: 1,
+                        yScale: 1
+                    }
+                }
+            });
+            boxes.push(box);
+            Matter.World.add(world, box);
+        };
+
+        createBox(300, 50, imageUrls[0]);
+        createBox(200, 50, imageUrls[1]);
+        createBox(400, 50, imageUrls[2]);
+        createBox(500, 50, imageUrls[3]);
+        createBox(600, 50, imageUrls[4]);
+        createBox(700, 50, imageUrls[5]);
+        createBox(900, 50, imageUrls[6]);
+
+        // Create ground
+        const ground = Matter.Bodies.rectangle(window.innerWidth / 2, window.innerHeight + 25, window.innerWidth, 50, {
+            isStatic: true,
+            render: {
+                fillStyle: '#ffffff'
+            }
+        });
+
+        // Create left, right, and top walls
+        const leftWall = Matter.Bodies.rectangle(-25, window.innerHeight / 2, 50, window.innerHeight, {
+            isStatic: true,
+            render: {
+                fillStyle: '#ffffff'
+            }
+        });
+        const rightWall = Matter.Bodies.rectangle(window.innerWidth + 25, window.innerHeight / 2, 50, window.innerHeight, {
+            isStatic: true,
+            render: {
+                fillStyle: '#ffffff'
+            }
+        });
+        const topWall = Matter.Bodies.rectangle(window.innerWidth / 2, -25, window.innerWidth, 50, {
+            isStatic: true,
+            render: {
+                fillStyle: '#ffffff'
+            }
+        });
+
+        Matter.World.add(world, [ground, leftWall, rightWall, topWall]);
+
+        // Add mouse control
+        const mouse = Matter.Mouse.create(render.canvas);
+        const mouseConstraint = Matter.MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false
+                }
+            }
+        });
+        Matter.World.add(world, mouseConstraint);
+
+        // Keep the mouse in sync with rendering
+        render.mouse = mouse;
+
+        // Run the engine and renderer
+        Matter.Engine.run(engine);
+        Matter.Render.run(render);
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            Matter.Render.lookAt(render, {
+                min: { x: 0, y: 0 },
+                max: { x: window.innerWidth, y: window.innerHeight }
+            });
+
+            Matter.Body.setPosition(ground, { x: window.innerWidth / 2, y: window.innerHeight + 25 });
+            Matter.Body.setVertices(ground, Matter.Vertices.create([
+                { x: 0, y: window.innerHeight },
+                { x: window.innerWidth, y: window.innerHeight },
+                { x: window.innerWidth, y: window.innerHeight + 50 },
+                { x: 0, y: window.innerHeight + 50 }
+            ]));
+
+            Matter.Body.setPosition(leftWall, { x: -25, y: window.innerHeight / 2 });
+            Matter.Body.setVertices(leftWall, Matter.Vertices.create([
+                { x: -25, y: 0 },
+                { x: 25, y: 0 },
+                { x: 25, y: window.innerHeight },
+                { x: -25, y: window.innerHeight }
+            ]));
+
+            Matter.Body.setPosition(rightWall, { x: window.innerWidth + 25, y: window.innerHeight / 2 });
+            Matter.Body.setVertices(rightWall, Matter.Vertices.create([
+                { x: window.innerWidth, y: 0 },
+                { x: window.innerWidth + 50, y: 0 },
+                { x: window.innerWidth + 50, y: window.innerHeight },
+                { x: window.innerWidth, y: window.innerHeight }
+            ]));
+
+            Matter.Body.setPosition(topWall, { x: window.innerWidth / 2, y: -25 });
+            Matter.Body.setVertices(topWall, Matter.Vertices.create([
+                { x: 0, y: -25 },
+                { x: window.innerWidth, y: -25 },
+                { x: window.innerWidth, y: 25 },
+                { x: 0, y: 25 }
+            ]));
+        });
+    </script>
+</body>
+</html>
